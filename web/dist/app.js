@@ -4,12 +4,12 @@
   const qtypeNames = { 1: "A", 28: "AAAA", 5: "CNAME", 15: "MX", 16: "TXT", 2: "NS", 6: "SOA", 33: "SRV", 65: "HTTPS" };
   const domainTypeNames = { 0: "Whitelist (esatto)", 1: "Blacklist (esatto)", 2: "Whitelist (regex)", 3: "Blacklist (regex)" };
   const statusNames = {
-    0: ["Sconosciuto", "badge-allowed"],
-    1: ["Bloccato (blocklist)", "badge-blocked"],
-    2: ["Consentito", "badge-allowed"],
-    4: ["Bloccato (regex)", "badge-blocked"],
-    5: ["Bloccato (manuale)", "badge-blocked"],
-    6: ["Errore upstream", "badge-blocked"],
+    0: ["Sconosciuto", "badge-muted"],
+    1: ["Bloccato (blocklist)", "badge-red"],
+    2: ["Consentito", "badge-green"],
+    4: ["Bloccato (regex)", "badge-red"],
+    5: ["Bloccato (manuale)", "badge-red"],
+    6: ["Errore upstream", "badge-red"],
   };
 
   async function api(path, opts = {}) {
@@ -52,14 +52,14 @@
     const enableBtn = document.getElementById("btn-enable");
     if (data.blocking) {
       pill.textContent = "Attivo";
-      pill.className = "status-pill status-on";
+      pill.className = "badge badge-green";
       enableBtn.classList.add("hidden");
     } else {
       const until = data.disabled_until
         ? ` (fino alle ${new Date(data.disabled_until * 1000).toLocaleTimeString()})`
         : "";
       pill.textContent = "Disattivato" + until;
-      pill.className = "status-pill status-off";
+      pill.className = "badge badge-red";
       enableBtn.classList.remove("hidden");
     }
   }
@@ -158,10 +158,15 @@
     const type = parseInt(document.getElementById("domain-type").value, 10);
     const comment = document.getElementById("domain-comment").value.trim();
     if (!domain) return;
-    await api("/api/domains", { method: "POST", body: JSON.stringify({ domain, type, comment }) });
-    document.getElementById("domain-input").value = "";
-    document.getElementById("domain-comment").value = "";
-    loadDomains();
+    try {
+      await api("/api/domains", { method: "POST", body: JSON.stringify({ domain, type, comment }) });
+      document.getElementById("domain-input").value = "";
+      document.getElementById("domain-comment").value = "";
+      showToast("Dominio aggiunto");
+      loadDomains();
+    } catch (err) {
+      showToast(err.message, false);
+    }
   });
 
   // --- Lists ---
@@ -198,16 +203,26 @@
     const address = document.getElementById("list-address").value.trim();
     const comment = document.getElementById("list-comment").value.trim();
     if (!address) return;
-    await api("/api/lists", { method: "POST", body: JSON.stringify({ address, type: 0, comment }) });
-    document.getElementById("list-address").value = "";
-    document.getElementById("list-comment").value = "";
-    loadLists();
+    try {
+      await api("/api/lists", { method: "POST", body: JSON.stringify({ address, type: 0, comment }) });
+      document.getElementById("list-address").value = "";
+      document.getElementById("list-comment").value = "";
+      showToast("Blocklist aggiunta");
+      loadLists();
+    } catch (err) {
+      showToast(err.message, false);
+    }
   });
 
   document.getElementById("btn-update-gravity").addEventListener("click", async (e) => {
     e.preventDefault();
     e.target.textContent = "Aggiornamento in corso…";
-    await api("/api/lists/update", { method: "POST" });
+    try {
+      await api("/api/lists/update", { method: "POST" });
+      showToast("Aggiornamento blocklist avviato");
+    } catch (err) {
+      showToast(err.message, false);
+    }
     setTimeout(() => {
       e.target.textContent = "Aggiorna tutte le blocklist";
       loadLists();
@@ -240,10 +255,15 @@
     const name = document.getElementById("group-name").value.trim();
     const description = document.getElementById("group-description").value.trim();
     if (!name) return;
-    await api("/api/groups", { method: "POST", body: JSON.stringify({ name, description }) });
-    document.getElementById("group-name").value = "";
-    document.getElementById("group-description").value = "";
-    loadGroups();
+    try {
+      await api("/api/groups", { method: "POST", body: JSON.stringify({ name, description }) });
+      document.getElementById("group-name").value = "";
+      document.getElementById("group-description").value = "";
+      showToast("Gruppo aggiunto");
+      loadGroups();
+    } catch (err) {
+      showToast(err.message, false);
+    }
   });
 
   // --- Clients ---
@@ -263,11 +283,25 @@
     const ip = document.getElementById("client-ip").value.trim();
     const comment = document.getElementById("client-comment").value.trim();
     if (!ip) return;
-    await api("/api/clients", { method: "POST", body: JSON.stringify({ ip, comment }) });
-    document.getElementById("client-ip").value = "";
-    document.getElementById("client-comment").value = "";
-    loadClients();
+    try {
+      await api("/api/clients", { method: "POST", body: JSON.stringify({ ip, comment }) });
+      document.getElementById("client-ip").value = "";
+      document.getElementById("client-comment").value = "";
+      showToast("Client aggiunto");
+      loadClients();
+    } catch (err) {
+      showToast(err.message, false);
+    }
   });
+
+  // --- Toast ---
+  function showToast(message, ok = true) {
+    const toast = document.createElement("div");
+    toast.className = `toast ${ok ? "ok" : "err"}`;
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 2600);
+  }
 
   // --- Helpers ---
   function escapeHtml(s) {

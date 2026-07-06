@@ -4,119 +4,137 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Yoshi Pi-hole</title>
+<meta name="theme-color" content="#7c3aed">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<div id="app" class="app">
-  <header class="topbar">
-    <div class="brand">🐉 Yoshi Pi-hole</div>
-    <div class="blocking-control">
-      <span id="blocking-status" class="status-pill status-on">Attivo</span>
-      <button data-timer="0" class="btn-toggle">Disabilita</button>
-      <button data-timer="30" class="btn-toggle small">30s</button>
-      <button data-timer="300" class="btn-toggle small">5m</button>
-      <button data-timer="1800" class="btn-toggle small">30m</button>
-      <button id="btn-enable" class="btn-toggle enable hidden">Riabilita</button>
+<div id="splash" role="presentation" aria-hidden="true">
+  <div class="splash-logo-wrap">
+    <div class="splash-logo-ghost">🐉</div>
+    <div class="splash-logo-fill">🐉</div>
+  </div>
+  <span class="splash-brand">Yoshi Pi-hole</span>
+</div>
+
+<header>
+  <h1>🐉 Yoshi Pi-hole</h1>
+  <div class="header-actions">
+    <span id="blocking-status" class="badge badge-green">Attivo</span>
+    <button data-timer="0" class="btn btn-ghost btn-toggle">Disabilita</button>
+    <button data-timer="30" class="btn btn-ghost btn-toggle">30s</button>
+    <button data-timer="300" class="btn btn-ghost btn-toggle">5m</button>
+    <button data-timer="1800" class="btn btn-ghost btn-toggle">30m</button>
+    <button id="btn-enable" class="btn btn-primary hidden">Riabilita</button>
+  </div>
+</header>
+
+<nav class="tabs">
+  <button class="tab active" data-tab="dashboard">Dashboard</button>
+  <button class="tab" data-tab="querylog">Log Query</button>
+  <button class="tab" data-tab="domains">Domini</button>
+  <button class="tab" data-tab="lists">Blocklist</button>
+  <button class="tab" data-tab="groups">Gruppi</button>
+  <button class="tab" data-tab="clients">Client</button>
+</nav>
+
+<main>
+  <section id="tab-dashboard" class="tab-content active">
+    <div class="stat-grid">
+      <div class="card"><div class="stat-value" id="stat-total">0</div><div class="stat-label">Query totali (24h)</div></div>
+      <div class="card"><div class="stat-value" id="stat-blocked">0</div><div class="stat-label">Bloccate</div></div>
+      <div class="card"><div class="stat-value" id="stat-percent">0%</div><div class="stat-label">% bloccata</div></div>
+      <div class="card"><div class="stat-value" id="stat-gravity">0</div><div class="stat-label">Domini in blocklist</div></div>
     </div>
-  </header>
-
-  <nav class="tabs">
-    <button class="tab active" data-tab="dashboard">Dashboard</button>
-    <button class="tab" data-tab="querylog">Log Query</button>
-    <button class="tab" data-tab="domains">Domini</button>
-    <button class="tab" data-tab="lists">Blocklist</button>
-    <button class="tab" data-tab="groups">Gruppi</button>
-    <button class="tab" data-tab="clients">Client</button>
-  </nav>
-
-  <main>
-    <section id="tab-dashboard" class="tab-content active">
-      <div class="stat-grid">
-        <div class="stat-tile"><div class="stat-value" id="stat-total">0</div><div class="stat-label">Query totali (24h)</div></div>
-        <div class="stat-tile"><div class="stat-value" id="stat-blocked">0</div><div class="stat-label">Bloccate</div></div>
-        <div class="stat-tile"><div class="stat-value" id="stat-percent">0%</div><div class="stat-label">% bloccata</div></div>
-        <div class="stat-tile"><div class="stat-value" id="stat-gravity">0</div><div class="stat-label">Domini in blocklist</div></div>
+    <div class="panel-grid">
+      <div class="card">
+        <div class="card-title">Domini pi&ugrave; richiesti</div>
+        <table class="simple-table"><tbody id="top-domains"></tbody></table>
       </div>
-      <div class="panel-grid">
-        <div class="panel">
-          <h2>Domini pi&ugrave; richiesti</h2>
-          <table class="simple-table"><tbody id="top-domains"></tbody></table>
-        </div>
-        <div class="panel">
-          <h2>Domini pi&ugrave; bloccati</h2>
-          <table class="simple-table"><tbody id="top-blocked"></tbody></table>
-        </div>
+      <div class="card">
+        <div class="card-title">Domini pi&ugrave; bloccati</div>
+        <table class="simple-table"><tbody id="top-blocked"></tbody></table>
       </div>
-    </section>
+    </div>
+  </section>
 
-    <section id="tab-querylog" class="tab-content">
-      <div class="toolbar">
-        <input type="text" id="querylog-filter" placeholder="Filtra per dominio&hellip;">
-      </div>
+  <section id="tab-querylog" class="tab-content">
+    <div class="toolbar">
+      <input type="text" id="querylog-filter" placeholder="Filtra per dominio&hellip;">
+    </div>
+    <div class="table-wrap">
       <table class="data-table">
         <thead><tr><th>Ora</th><th>Dominio</th><th>Tipo</th><th>Client</th><th>Esito</th></tr></thead>
         <tbody id="querylog-body"></tbody>
       </table>
-    </section>
+    </div>
+  </section>
 
-    <section id="tab-domains" class="tab-content">
-      <form id="domain-form" class="inline-form">
-        <input type="text" id="domain-input" placeholder="dominio o pattern regex" required>
-        <select id="domain-type">
-          <option value="1">Blacklist (esatto)</option>
-          <option value="0">Whitelist (esatto)</option>
-          <option value="3">Blacklist (regex)</option>
-          <option value="2">Whitelist (regex)</option>
-        </select>
-        <input type="text" id="domain-comment" placeholder="commento (opzionale)">
-        <button type="submit">Aggiungi</button>
-      </form>
+  <section id="tab-domains" class="tab-content">
+    <form id="domain-form" class="inline-form">
+      <input type="text" id="domain-input" placeholder="dominio o pattern regex" required>
+      <select id="domain-type">
+        <option value="1">Blacklist (esatto)</option>
+        <option value="0">Whitelist (esatto)</option>
+        <option value="3">Blacklist (regex)</option>
+        <option value="2">Whitelist (regex)</option>
+      </select>
+      <input type="text" id="domain-comment" placeholder="commento (opzionale)">
+      <button type="submit" class="btn btn-primary">Aggiungi</button>
+    </form>
+    <div class="table-wrap">
       <table class="data-table">
         <thead><tr><th>Dominio</th><th>Tipo</th><th>Stato</th><th>Azioni</th></tr></thead>
         <tbody id="domains-body"></tbody>
       </table>
-    </section>
+    </div>
+  </section>
 
-    <section id="tab-lists" class="tab-content">
-      <form id="list-form" class="inline-form">
-        <input type="text" id="list-address" placeholder="URL blocklist (es. StevenBlack hosts)" required>
-        <input type="text" id="list-comment" placeholder="commento (opzionale)">
-        <button type="submit">Aggiungi</button>
-      </form>
-      <button id="btn-update-gravity" class="btn-primary">Aggiorna tutte le blocklist</button>
+  <section id="tab-lists" class="tab-content">
+    <form id="list-form" class="inline-form">
+      <input type="text" id="list-address" placeholder="URL blocklist (es. StevenBlack hosts)" required>
+      <input type="text" id="list-comment" placeholder="commento (opzionale)">
+      <button type="submit" class="btn btn-primary">Aggiungi</button>
+    </form>
+    <button id="btn-update-gravity" class="btn btn-ghost" style="margin-bottom:1rem;">Aggiorna tutte le blocklist</button>
+    <div class="table-wrap">
       <table class="data-table">
         <thead><tr><th>Indirizzo</th><th>Domini</th><th>Stato</th><th>Attiva</th><th>Azioni</th></tr></thead>
         <tbody id="lists-body"></tbody>
       </table>
-    </section>
+    </div>
+  </section>
 
-    <section id="tab-groups" class="tab-content">
-      <form id="group-form" class="inline-form">
-        <input type="text" id="group-name" placeholder="nome gruppo" required>
-        <input type="text" id="group-description" placeholder="descrizione (opzionale)">
-        <button type="submit">Aggiungi</button>
-      </form>
+  <section id="tab-groups" class="tab-content">
+    <form id="group-form" class="inline-form">
+      <input type="text" id="group-name" placeholder="nome gruppo" required>
+      <input type="text" id="group-description" placeholder="descrizione (opzionale)">
+      <button type="submit" class="btn btn-primary">Aggiungi</button>
+    </form>
+    <div class="table-wrap">
       <table class="data-table">
         <thead><tr><th>Nome</th><th>Descrizione</th><th>Attivo</th></tr></thead>
         <tbody id="groups-body"></tbody>
       </table>
-    </section>
+    </div>
+  </section>
 
-    <section id="tab-clients" class="tab-content">
-      <form id="client-form" class="inline-form">
-        <input type="text" id="client-ip" placeholder="IP o subnet (es. 0.0.0.0/0)" required>
-        <input type="text" id="client-comment" placeholder="commento (opzionale)">
-        <button type="submit">Aggiungi</button>
-      </form>
+  <section id="tab-clients" class="tab-content">
+    <form id="client-form" class="inline-form">
+      <input type="text" id="client-ip" placeholder="IP o subnet (es. 0.0.0.0/0)" required>
+      <input type="text" id="client-comment" placeholder="commento (opzionale)">
+      <button type="submit" class="btn btn-primary">Aggiungi</button>
+    </form>
+    <div class="table-wrap">
       <table class="data-table">
         <thead><tr><th>IP</th><th>Commento</th></tr></thead>
         <tbody id="clients-body"></tbody>
       </table>
-    </section>
-  </main>
-</div>
+    </div>
+  </section>
+</main>
 
+<script src="splash.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
