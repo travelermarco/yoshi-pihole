@@ -1,7 +1,7 @@
 # 🐉 Yoshi Pi-hole
 
 [![CI](https://github.com/travelermarco/yoshi-pihole/actions/workflows/ci.yml/badge.svg)](https://github.com/travelermarco/yoshi-pihole/actions/workflows/ci.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?logo=open-source-initiative&logoColor=white)](LICENSE)
 ![Go version](https://img.shields.io/badge/Go-1.25%2B-00ADD8)
 
 A **local** ad/tracker blocker, inspired by [Pi-hole](https://pi-hole.net/), that runs entirely on a single Mac — no Raspberry Pi, no dedicated network device. A single Go binary handles the DNS sinkhole, the REST API, and the web dashboard; a status bar icon shows whether blocking is active.
