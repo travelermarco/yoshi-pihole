@@ -1,0 +1,24 @@
+# Yoshi Pi-hole configuration.
+# Any field omitted here falls back to the built-in default (see internal/config/config.go).
+
+dns:
+  listen: "127.0.0.1:15353"      # use 127.0.0.1:53 only when running as the installed root daemon
+                                  # (NOT 5353: macOS's own mDNSResponder/Bonjour always owns that port)
+  upstreams:
+    - "1.1.1.1:53"
+    - "9.9.9.9:53"
+  upstream_timeout_ms: 2000
+
+web:
+  listen: "127.0.0.1:8080"
+
+storage:
+  data_dir: "./data"
+
+gravity:
+  default_adlists:
+    - "https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts"
+  update_interval_hours: 24
+
+blocking:
+  mode: "null"                   # "null" (0.0.0.0 / ::) or "nxdomain"

@@ -1,0 +1,16 @@
+# Dati runtime (blocklist compilate, log query, backup DNS)
+data/
+*.db
+*.db-shm
+*.db-wal
+
+# Log
+*.log
+
+# Binari compilati
+/yoshi-pihole
+/yoshi-menubar
+.yoshi-pihole-build
+
+# macOS
+.DS_Store
