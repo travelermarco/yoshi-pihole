@@ -1,5 +1,9 @@
 # 🐉 Yoshi Pi-hole
 
+[![CI](https://github.com/travelermarco/yoshi-pihole/actions/workflows/ci.yml/badge.svg)](https://github.com/travelermarco/yoshi-pihole/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+![Go version](https://img.shields.io/badge/Go-1.25%2B-00ADD8)
+
 A **local** ad/tracker blocker, inspired by [Pi-hole](https://pi-hole.net/), that runs entirely on a single Mac — no Raspberry Pi, no dedicated network device. A single Go binary handles the DNS sinkhole, the REST API, and the web dashboard; a status bar icon shows whether blocking is active.
 
 Not affiliated with the Pi-hole project: this is a personal project written from scratch, inspired by its architecture and feature set.
@@ -39,7 +43,7 @@ The DNS daemon runs as a **root system LaunchDaemon**, required to use port 53. 
 ## Requirements
 
 - macOS (built and tested on Apple Silicon)
-- [Go](https://go.dev/dl/) 1.22 or later (build-time only)
+- [Go](https://go.dev/dl/) 1.25 or later (build-time only)
 - Xcode Command Line Tools (`xcode-select --install`) — needed by `cgo` for the status bar icon
 
 ## Installation
@@ -79,4 +83,4 @@ launchctl bootout gui/$(id -u)/com.yoshi.pihole.menubar       # status bar icon
 
 ## License
 
-[MIT](LICENSE)
+[MIT](LICENSE). See [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md) for dependency licenses and [SECURITY.md](SECURITY.md) for the security model.
