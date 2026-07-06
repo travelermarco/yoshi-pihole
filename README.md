@@ -1,82 +1,82 @@
 # 🐉 Yoshi Pi-hole
 
-Un blocco pubblicità/tracker **locale**, ispirato a [Pi-hole](https://pi-hole.net/), che gira interamente su un singolo Mac — senza Raspberry Pi, senza un dispositivo di rete dedicato. Un solo binario Go fa da sinkhole DNS, API REST e dashboard web; un'icona nella barra di stato mostra lo stato del blocco.
+A **local** ad/tracker blocker, inspired by [Pi-hole](https://pi-hole.net/), that runs entirely on a single Mac — no Raspberry Pi, no dedicated network device. A single Go binary handles the DNS sinkhole, the REST API, and the web dashboard; a status bar icon shows whether blocking is active.
 
-Non affiliato al progetto Pi-hole: è un progetto personale scritto da zero, ispirato alla sua architettura e alle sue funzionalità.
+Not affiliated with the Pi-hole project: this is a personal project written from scratch, inspired by its architecture and feature set.
 
-## Come funziona
+## How it works
 
-Il Mac diventa il proprio resolver DNS: le richieste verso domini pubblicitari/traccianti vengono bloccate localmente (risposta nulla o NXDOMAIN), tutte le altre vengono inoltrate normalmente a un upstream (Cloudflare/Quad9). Questo blocca gli annunci a livello di sistema operativo — browser, app, tutto — non solo nel browser.
+The Mac becomes its own DNS resolver: requests to ad/tracking domains are blocked locally (null response or NXDOMAIN), everything else is forwarded normally to an upstream resolver (Cloudflare/Quad9). This blocks ads at the operating-system level — browsers, apps, everything — not just in the browser.
 
-## Funzionalità
+## Features
 
-- **Motore DNS** (`miekg/dns`) con blocklist in formato hosts, plain-domain e Adblock Plus (`||dominio^`)
-- **Blocklist di default**: [StevenBlack hosts](https://github.com/StevenBlack/hosts), aggiornabile dalla dashboard
-- **Whitelist/blacklist manuale**, esatta o **regex** (con le estensioni in stile Pi-hole: `;querytype=`, `;invert`, `;reply=`)
-- **Gruppi e client**, log query in tempo reale, statistiche
-- **Bedtime mode**: disabilitazione del blocco a tempo (30s/5m/30m o indefinita)
-- **API REST** locale (nessuna autenticazione: è pensato per un solo utente sulla propria macchina, in ascolto solo su `127.0.0.1`)
-- **Dashboard web** integrata nel binario (nessun Node/build step)
-- **Icona nella barra di stato** con stato del blocco e controlli rapidi, avvio automatico ad ogni login
+- **DNS engine** (`miekg/dns`) supporting hosts-file, plain-domain, and Adblock Plus (`||domain^`) blocklist formats
+- **Default blocklist**: [StevenBlack hosts](https://github.com/StevenBlack/hosts), updatable from the dashboard
+- **Manual whitelist/blacklist**, exact or **regex** (with Pi-hole-style extensions: `;querytype=`, `;invert`, `;reply=`)
+- **Groups and clients**, live query log, stats
+- **Bedtime mode**: timed disable (30s/5m/30m, or indefinite)
+- **Local REST API** (no authentication: single-user, single-machine tool, bound to `127.0.0.1` only)
+- **Web dashboard** embedded in the binary (no Node/build step)
+- **Status bar icon** showing blocking state with quick controls, auto-starts at login
 
-## Architettura
+## Architecture
 
 ```
-cmd/yoshi-pihole/     binario principale: motore DNS + API + dashboard
-cmd/yoshi-menubar/    icona nella barra di stato (processo separato, sessione utente)
-internal/dns/         server DNS (miekg/dns), forwarding upstream
-internal/gravity/     fetch e parsing delle blocklist, estensioni regex
-internal/matcher/     motore di matching in memoria (allow/deny, esatto/regex)
-internal/db/          due SQLite: gravity.db (liste/gruppi/client) e queries.db (log)
-internal/api/         API REST
-internal/service/     bedtime mode (disabilitazione a tempo)
-web/                  dashboard statica (HTML/CSS/JS), incorporata via go:embed
-scripts/              installazione/disinstallazione
+cmd/yoshi-pihole/     main binary: DNS engine + API + dashboard
+cmd/yoshi-menubar/    status bar icon (separate process, user session)
+internal/dns/         DNS server (miekg/dns), upstream forwarding
+internal/gravity/     blocklist fetching and parsing, regex extensions
+internal/matcher/     in-memory matching engine (allow/deny, exact/regex)
+internal/db/          two SQLite databases: gravity.db (lists/groups/clients) and queries.db (log)
+internal/api/         REST API
+internal/service/     bedtime mode (timed disable)
+web/                  static dashboard (HTML/CSS/JS), embedded via go:embed
+scripts/              install/uninstall
 ```
 
-Il demone DNS gira come **LaunchDaemon di sistema (root)**, necessario per usare la porta 53. L'icona nella barra di stato gira invece come **LaunchAgent utente**, perché un processo root non ha accesso alla sessione grafica.
+The DNS daemon runs as a **root system LaunchDaemon**, required to use port 53. The status bar icon runs as a **user LaunchAgent** instead, since a root process has no access to the GUI session.
 
-## Requisiti
+## Requirements
 
-- macOS (sviluppato e testato su Apple Silicon)
-- [Go](https://go.dev/dl/) 1.22 o superiore (solo per compilare)
-- Xcode Command Line Tools (`xcode-select --install`) — servono a `cgo` per l'icona nella barra di stato
+- macOS (built and tested on Apple Silicon)
+- [Go](https://go.dev/dl/) 1.22 or later (build-time only)
+- Xcode Command Line Tools (`xcode-select --install`) — needed by `cgo` for the status bar icon
 
-## Installazione
+## Installation
 
-### 1. Motore DNS (richiede sudo)
+### 1. DNS engine (requires sudo)
 
 ```sh
 sudo scripts/install.sh
 ```
 
-Compila il binario, lo installa come LaunchDaemon root in ascolto su `127.0.0.1:53`, e reindirizza il DNS di sistema del Mac su `127.0.0.1` (con backup automatico delle impostazioni precedenti). Chiede conferma prima di modificare qualsiasi impostazione.
+Builds the binary, installs it as a root LaunchDaemon listening on `127.0.0.1:53`, and redirects the Mac's system DNS to `127.0.0.1` (automatically backing up the previous settings). Asks for confirmation before changing anything.
 
-### 2. Icona nella barra di stato (facoltativa, NON richiede sudo)
+### 2. Status bar icon (optional, no sudo needed)
 
 ```sh
 scripts/install-menubar.sh
 ```
 
-### Disinstallazione
+### Uninstall
 
 ```sh
-sudo scripts/uninstall.sh                                    # demone DNS + ripristino DNS di sistema
-launchctl bootout gui/$(id -u)/com.yoshi.pihole.menubar       # icona barra di stato
+sudo scripts/uninstall.sh                                    # DNS daemon + restore system DNS
+launchctl bootout gui/$(id -u)/com.yoshi.pihole.menubar       # status bar icon
 ```
 
-## Uso
+## Usage
 
-- **Dashboard**: <http://127.0.0.1:8080> — statistiche, log query, gestione whitelist/blacklist/regex, blocklist, gruppi, client
-- **Barra di stato**: clic sull'icona per aprire la dashboard o disabilitare il blocco a tempo
-- **Sviluppo locale** (senza installare nulla come demone): `go run ./cmd/yoshi-pihole serve` — usa `config/config.yaml`, porta DNS `15353` per non entrare in conflitto con mDNSResponder/Bonjour (che occupa sempre la 5353 su macOS)
+- **Dashboard**: <http://127.0.0.1:8080> — stats, query log, whitelist/blacklist/regex management, blocklists, groups, clients
+- **Status bar**: click the icon to open the dashboard or pause blocking for a while
+- **Local development** (without installing anything as a daemon): `go run ./cmd/yoshi-pihole serve` — uses `config/config.yaml`, DNS port `15353` to avoid clashing with mDNSResponder/Bonjour (which always owns port 5353 on macOS)
 
-## Note
+## Notes
 
-- **iCloud Private Relay** può ignorare un resolver DNS locale: se non vedi il blocco funzionare, disattivalo per la rete in uso.
-- Una **VPN attiva** (es. WireGuard) può imporre il proprio DNS con precedenza: verifica con `scutil --dns`.
-- Nessuna telemetria: tutto (log query incluso) resta sul disco locale, in `/usr/local/yoshi-pihole/data/`.
+- **iCloud Private Relay** may ignore a local DNS resolver: if blocking doesn't seem to work, disable it for the network you're on.
+- An **active VPN** (e.g. WireGuard) may push its own DNS with higher precedence: check with `scutil --dns`.
+- No telemetry: everything (including the query log) stays on local disk, under `/usr/local/yoshi-pihole/data/`.
 
-## Licenza
+## License
 
-Da definire.
+[MIT](LICENSE)
