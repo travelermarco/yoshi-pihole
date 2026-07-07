@@ -14,8 +14,16 @@ import (
 	"time"
 
 	"github.com/getlantern/systray"
+)
 
-	"yoshi-pihole/internal/trayicon"
+// The status bar glyph is the same 🐉 dragon used in the dashboard's header
+// and splash screen, kept as plain title text rather than a drawn icon —
+// menu bar icons are forced monochrome/template by macOS, so a hand-drawn
+// shape reads as a blob at that size, while emoji render crisp and in full
+// color and stay visually consistent with the rest of the brand.
+const (
+	titleActive = "🐉"
+	titlePaused = "🐉⏸"
 )
 
 const (
@@ -28,7 +36,7 @@ func main() {
 }
 
 func onReady() {
-	systray.SetTemplateIcon(trayicon.Active(), trayicon.Active())
+	systray.SetTitle(titleActive)
 	systray.SetTooltip("Yoshi Pi-hole")
 
 	mOpen := systray.AddMenuItem("Apri Dashboard", "Apri la dashboard di Yoshi Pi-hole")
@@ -86,10 +94,10 @@ func refreshIcon() {
 	}
 
 	if data.Blocking {
-		systray.SetTemplateIcon(trayicon.Active(), trayicon.Active())
+		systray.SetTitle(titleActive)
 		systray.SetTooltip("Yoshi Pi-hole — blocco attivo")
 	} else {
-		systray.SetTemplateIcon(trayicon.Paused(), trayicon.Paused())
+		systray.SetTitle(titlePaused)
 		systray.SetTooltip("Yoshi Pi-hole — blocco disattivato")
 	}
 }
